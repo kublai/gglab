@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>io test</title>
+    <style>
+        .btnMetamask {
+            display: flex; 
+            align-items: center; 
+            color:white; 
+            background-color: orange; 
+            border-radius: 10px; 
+            border:0px;
+            cursor: pointer;
+        }
+        .btnMetamask:hover {
+            background-color: chocolate;
+        }
+    </style>
+</head>
+<body>
+    <h1>GGLAB Test for candidates</h1>
+    <h3>Connect metamask wallet</h3>
+    <button id="btnConnectMetamask" class="btnMetamask"><img src='/img/metamask32.png'>Connect Metamask</button>
+    <div id="metamaskAccount"></div>
+    <h3>Message to server</h3>
+    <form id="frmMessage" action="">
+    <input id="inputMessage" autocomplete="off" /><button id="btnSend">Send</button>
+    </form>
+    <h3>Messages from the server (every 2 seconds)</h3>
+    <ul id="serverMessages"></ul>
+
+    <script type="text/javascript" src="socket.io/socket.io.js"></script>
+    <script>
+        //send and receive messages using sockets.io
+        const socket = io();
+        const btnSend = document.getElementById('btnSend');
+        const frmMessage = document.getElementById('frmMessage');
+        const inpMessage = document.getElementById('inputMessage');
+        const btnMetamask = document.getElementById('btnConnectMetamask');
+        const txtMetamaskAccount = document.getElementById('metamaskAccount');
+        frmMessage.addEventListener('submit', function(e){
+            e.preventDefault();
+            console.log("Message to server -> " + inputMessage.value);
+            socket.emit("message event", inputMessage.value);
+            inputMessage.value = '';
+            inputMessage.focus();
+        });
+        socket.on('server message',(msg) => {
+            const aux = document.createElement("li");
+            aux.textContent = msg;
+            serverMessages.appendChild(aux);
+        });
+
+        //metamask connection
+        checkMetaMask();
+        btnMetamask.addEventListener('click', (e) => {
+            ethereum.request({method: 'eth_requestAccounts'}).then ( accounts =>{
+                account = accounts[0];
+                console.log(account);
+                ethereum.request({method: 'eth_getBalance', params: [ account, 'latest']}).then( result => {
+                    const balance = parseInt(result,16) / (10**18);
+                    txtMetamaskAccount.textContent = `Metamask Connected -> Account:${account} / Balance:${balance}`;
+                });
+            });
+        });
+
+        function checkMetaMask() {
+            if (typeof window.ethereum === 'undefined') {
+                alert('Please install the Metamask browser extension to continue')
+                throw new Error('Please install the Metamask browser extension to continue');
+            } 
+        }
+    </script>
+</body>
+
+</html>
+
